@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Book Recommendation Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the Inter font and overall aesthetics */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Subtle gradient background */
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px; /* More rounded corners */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); /* Stronger, softer shadow */
+            padding: 40px;
+            max-width: 900px; /* Slightly wider container */
+            width: 100%;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.8); /* Subtle white border */
+            backdrop-filter: blur(5px); /* Frosted glass effect */
+            -webkit-backdrop-filter: blur(5px);
+        }
+        .title-section h1 {
+            font-size: 3.5rem; /* Larger title */
+            font-weight: 800;
+            color: #2c3e50; /* Darker, more elegant text */
+            margin-bottom: 8px;
+            letter-spacing: -0.05em; /* Tighter letter spacing */
+            background: linear-gradient(45deg, #6366f1, #9333ea); /* Gradient text */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .title-section p {
+            font-size: 1.25rem; /* Larger subtitle */
+            color: #7f8c8d; /* Softer gray */
+            margin-bottom: 32px;
+        }
+        .input-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 24px;
+        }
+        .input-group, .filter-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+        }
+        .input-group input, .filter-group select {
+            flex-grow: 1;
+            min-width: 200px; /* Adjusted min-width for inputs/selects */
+            padding: 14px 20px;
+            border: 2px solid #e0e7ff; /* Lighter, more subtle border */
+            border-radius: 12px;
+            font-size: 17px;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Inner shadow */
+            background-color: #ffffff;
+            appearance: none; /* Remove default select arrow */
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='currentColor'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E"); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.5em;
+        }
+        .input-group input:focus, .filter-group select:focus {
+            border-color: #6366f1; /* Indigo-500 */
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2); /* Focus ring */
+        }
+        .input-group button {
+            background: linear-gradient(45deg, #6366f1, #9333ea); /* Gradient button */
+            color: white;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4); /* Stronger button shadow */
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+        .input-group button:hover {
+            transform: translateY(-3px); /* Lift effect */
+            box-shadow: 0 12px 25px rgba(99, 102, 241, 0.5); /* Enhanced shadow on hover */
+        }
+        .input-group button:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+        .input-group button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: rgba(255, 255, 255, 0.15);
+            transition: all 0.7s ease-in-out;
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0;
+            z-index: 0;
+        }
+        .input-group button:hover::before {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        .input-group button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .recommendations-section {
+            margin-top: 40px;
+            text-align: left;
+        }
+        .recommendations-section h2 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #34495e;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .recommendation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive grid */
+            gap: 20px;
+            justify-content: center;
+        }
+        .recommendation-item {
+            background-color: #ffffff;
+            border: 1px solid #e0e7ff; /* Lighter border */
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column; /* Stack content */
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Card shadow */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-align: center;
+        }
+        .recommendation-item:hover {
+            transform: translateY(-5px); /* Lift effect on hover */
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12); /* Enhanced shadow on hover */
+        }
+        .recommendation-item img {
+            width: 120px; /* Larger image */
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #f0f2f5; /* Subtle image border */
+        }
+        .recommendation-item-content {
+            flex-grow: 1;
+        }
+        .recommendation-item h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .recommendation-item p {
+            font-size: 15px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .message-box {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 12px; /* More rounded */
+            font-size: 16px;
+            font-weight: 500;
+            display: none; /* Hidden by default */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        .message-box.error {
+            background-color: #fee2e2; /* Red-100 */
+            color: #dc2626; /* Red-600 */
+            border: 1px solid #fca5a5; /* Red-300 */
+        }
+        .message-box.info {
+            background-color: #e0f2fe; /* Light Blue-100 */
+            color: #0284c7; /* Light Blue-700 */
+            border: 1px solid #7dd3fc; /* Light Blue-300 */
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            .title-section h1 {
+                font-size: 2.5rem;
+            }
+            .title-section p {
+                font-size: 1rem;
+            }
+            .input-group, .filter-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .input-group input, .filter-group select, .input-group button {
+                width: 100%;
+                min-width: unset;
+            }
+            .recommendations-section h2 {
+                font-size: 1.8rem;
+            }
+            .recommendation-grid {
+                grid-template-columns: 1fr; /* Single column on small screens */
+            }
+            .recommendation-item img {
+                width: 100px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-section">
+            <h1>Book Recommender</h1>
+            <p>Discover your next favorite book with intelligent suggestions.</p>
+        </div>
+
+        <div class="input-controls">
+            <div class="input-group">
+                <input type="text" id="bookTitleInput" placeholder="Enter a book title (e.g., The Hobbit)">
+                <button id="getRecommendationsBtn"><span>Get Recommendations</span></button>
+            </div>
+            <div class="filter-group">
+                <select id="genreFilter">
+                    <option value="">Any Genre</option>
+                    <option value="Fantasy">Fantasy</option>
+                    <option value="Science Fiction">Science Fiction</option>
+                    <option value="Thriller">Thriller</option>
+                    <option value="Romance">Romance</option>
+                    <option value="History">History</option>
+                    <option value="Mystery">Mystery</option>
+                    <option value="Biography">Biography</option>
+                    <option value="Horror">Horror</option>
+                    <option value="Young Adult">Young Adult</option>
+                    <!-- Add more genres as needed -->
+                </select>
+                <select id="recommendationType">
+                    <option value="similar">Similar Books</option>
+                    <option value="same_author">Books by Same Author</option>
+                    <option value="same_series">Books in Same Series</option>
+                    <option value="popular_in_genre">Popular Books in Selected Genre</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="messageBox" class="message-box"></div>
+
+        <div id="recommendationsList" class="recommendations-section">
+            <h2>Recommended Books</h2>
+            <div id="recommendationGrid" class="recommendation-grid">
+                <!-- Recommendations will be loaded here -->
+            </div>
+            <p id="noRecommendationsMessage" class="text-gray-500 text-center mt-8 hidden">No recommendations yet. Enter a book title to get started!</p>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const bookTitleInput = document.getElementById('bookTitleInput');
+        const getRecommendationsBtn = document.getElementById('getRecommendationsBtn');
+        const genreFilter = document.getElementById('genreFilter');
+        const recommendationType = document.getElementById('recommendationType');
+        const recommendationGrid = document.getElementById('recommendationGrid');
+        const messageBox = document.getElementById('messageBox');
+        const noRecommendationsMessage = document.getElementById('noRecommendationsMessage');
+
+        // Function to display messages (errors, info)
+        function showMessage(message, type = 'info') {
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`; // Add type class (error/info)
+            messageBox.style.display = 'block'; // Make visible
+        }
+
+        // Function to hide messages
+        function hideMessage() {
+            messageBox.style.display = 'none';
+            messageBox.textContent = '';
+        }
+
+        // Function to display loading state
+        function showLoading() {
+            getRecommendationsBtn.innerHTML = '<span class="loading-spinner"></span> <span>Loading...</span>';
+            getRecommendationsBtn.disabled = true;
+            hideMessage(); // Hide any previous messages
+            noRecommendationsMessage.classList.add('hidden'); // Hide "No recommendations yet"
+            recommendationGrid.innerHTML = ''; // Clear previous recommendations
+        }
+
+        // Function to hide loading state
+        function hideLoading() {
+            getRecommendationsBtn.innerHTML = '<span>Get Recommendations</span>';
+            getRecommendationsBtn.disabled = false;
+        }
+
+        // Function to display recommendations
+        function displayRecommendations(recommendations) {
+            recommendationGrid.innerHTML = ''; // Clear previous recommendations
+            if (recommendations && recommendations.length > 0) {
+                recommendations.forEach(book => {
+                    const bookItem = document.createElement('div');
+                    bookItem.className = 'recommendation-item';
+                    bookItem.innerHTML = `
+                        <img src="${book.imageUrl || 'https://placehold.co/120x180/E0E7FF/4338CA?text=Book'}" onerror="this.onerror=null;this.src='https://placehold.co/120x180/E0E7FF/4338CA?text=Book';" alt="${book.title || 'Book cover'}">
+                        <div class="recommendation-item-content">
+                            <h3>${book.title || 'Unknown Title'}</h3>
+                            <p>${book.description || 'No description available.'}</p>
+                        </div>
+                    `;
+                    recommendationGrid.appendChild(bookItem);
+                });
+                noRecommendationsMessage.classList.add('hidden'); // Ensure it's hidden if recommendations exist
+            } else {
+                noRecommendationsMessage.classList.remove('hidden'); // Show if no recommendations
+            }
+        }
+
+        // Function to fetch recommendations using Gemini API
+        async function getBookRecommendations() {
+            const bookTitle = bookTitleInput.value.trim();
+            const selectedGenre = genreFilter.value;
+            const selectedRecType = recommendationType.value;
+
+            if (!bookTitle && selectedRecType !== 'popular_in_genre') {
+                showMessage('Please enter a book title to get recommendations.', 'error');
+                return;
+            }
+            if (selectedRecType === 'popular_in_genre' && !selectedGenre) {
+                showMessage('Please select a genre for "Popular Books in Selected Genre" recommendation type.', 'error');
+                return;
+            }
+
+            showLoading(); // Show loading indicator
+
+            try {
+                let prompt = "";
+                if (selectedRecType === 'similar') {
+                    prompt = `Suggest 5 books similar to "${bookTitle}"`;
+                    if (selectedGenre) {
+                        prompt += ` in the "${selectedGenre}" genre.`;
+                    }
+                    prompt += ` Provide the output as a JSON array of objects, where each object has 'title' and 'description' keys.`;
+                } else if (selectedRecType === 'same_author') {
+                    prompt = `Suggest 5 other books by the same author as "${bookTitle}".`;
+                    if (selectedGenre) {
+                        prompt += ` Focus on books in the "${selectedGenre}" genre if available.`;
+                    }
+                    prompt += ` Provide the output as a JSON array of objects, where each object has 'title' and 'description' keys.`;
+                } else if (selectedRecType === 'same_series') {
+                    prompt = `Suggest 5 other books in the same series as "${bookTitle}".`;
+                    if (selectedGenre) {
+                        prompt += ` Focus on books in the "${selectedGenre}" genre if applicable.`;
+                    }
+                    prompt += ` Provide the output as a JSON array of objects, where each object has 'title' and 'description' keys.`;
+                } else if (selectedRecType === 'popular_in_genre') {
+                    prompt = `Suggest 5 popular books in the "${selectedGenre}" genre.`;
+                    prompt += ` Provide the output as a JSON array of objects, where each object has 'title' and 'description' keys.`;
+                }
+
+
+                let chatHistory = [];
+                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+
+                const payload = {
+                    contents: chatHistory,
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "title": { "type": "STRING" },
+                                    "description": { "type": "STRING" }
+                                },
+                                "propertyOrdering": ["title", "description"]
+                            }
+                        }
+                    }
+                };
+
+                const apiKey = "AIzaSyB5MVtDlbrHef0PXXZTq6xoTc_LIXKPbA4"; // Canvas will provide this at runtime. For local testing, replace with your actual API key.
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`API error: ${response.status} - ${errorData.error.message || 'Unknown error'}`);
+                }
+
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const jsonString = result.candidates[0].content.parts[0].text;
+                    const recommendations = JSON.parse(jsonString);
+                    displayRecommendations(recommendations);
+                    if (recommendations.length === 0) {
+                        showMessage('No recommendations found for your query. Try different filters or a different title.', 'info');
+                    } else {
+                        hideMessage(); // Hide message if recommendations are found
+                    }
+                } else {
+                    showMessage('Could not get recommendations. Please try again.', 'error');
+                    displayRecommendations([]); // Clear any old recommendations
+                }
+
+            } catch (error) {
+                console.error('Error fetching recommendations:', error);
+                showMessage(`Failed to get recommendations: ${error.message}. Please try again.`, 'error');
+                displayRecommendations([]); // Clear any old recommendations
+            } finally {
+                hideLoading(); // Hide loading indicator
+            }
+        }
+
+        // Event listener for the button
+        getRecommendationsBtn.addEventListener('click', getBookRecommendations);
+
+        // Optional: Allow pressing Enter in the input field to trigger search
+        bookTitleInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                getRecommendationsBtn.click();
+            }
+        });
+
+        // Initial state: show "No recommendations yet" message
+        noRecommendationsMessage.classList.remove('hidden');
+    </script>
+</body>
+</html>
